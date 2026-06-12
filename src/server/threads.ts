@@ -178,17 +178,3 @@ export async function setThreadMetadata(
     threadId,
   ]);
 }
-
-/**
- * Update a thread's unresponded-patient counter after a new message. Patient
- * messages increment the count; physician messages reset it to 0.
- */
-export async function recordMessageForMetadata(
-  threadId: string,
-  role: "patient" | "physician"
-): Promise<void> {
-  const metadata = await getThreadMetadata(threadId);
-  metadata.unrespondedPatientMessagesCount =
-    role === "patient" ? metadata.unrespondedPatientMessagesCount + 1 : 0;
-  await setThreadMetadata(threadId, metadata);
-}
