@@ -11,7 +11,7 @@
  * At-least-once delivery is real here: if a worker fails to call
  * deleteMessage before the visibility timeout, the job becomes visible
  * again and another `receiveMessages` call will return it. Handlers must
- * be idempotent — see src/server/queue/handlers/summarizeThread.ts.
+ * be idempotent.
  */
 
 import { query, one, tx } from "../db";
