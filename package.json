@@ -11,7 +11,9 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "tsx scripts/migrate.ts",
-    "db:reset": "tsx scripts/db-reset.ts && tsx scripts/migrate.ts"
+    "db:reset": "tsx scripts/db-reset.ts && tsx scripts/migrate.ts",
+    "relay:send": "tsx scripts/relay-send.ts",
+    "backfill:summaries": "tsx scripts/backfillSummaries.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.1",
