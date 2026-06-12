@@ -20,3 +20,16 @@ export async function getPatientById(id: string): Promise<ApiUser | null> {
   );
   return rows[0] ? toUser(rows[0]) : null;
 }
+
+/**
+ * Resolve the patient registered at a given phone number. Used by the inbound
+ * Relay webhook to map an inbound message's `from` address to a patient.
+ * Returns null when no patient is registered at that number.
+ */
+export async function getPatientByPhone(phone: string): Promise<ApiUser | null> {
+  const { rows } = await query<PatientRow>(
+    "SELECT id, name FROM patients WHERE phone = $1",
+    [phone]
+  );
+  return rows[0] ? toUser(rows[0]) : null;
+}
