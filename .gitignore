@@ -1,0 +1,10 @@
+node_modules
+.next
+src/scripts
+.DS_Store
+.pglite/
+.env
+.env.local
+
+## TypeScript
+*.tsbuildinfo
