@@ -1,6 +1,6 @@
 import { ApiThread, ApiMessage, ApiUser } from "@/types/dto";
-import { FC, Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { TextChatMessage } from "./ChatMessage";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
+import { MessageGroupView, groupMessages } from "./ChatMessage";
 import { Icons } from "./icons";
 import { cn } from "@/utils/cssUtils";
 import { handlePromiseRejection } from "@/utils/miscUtils";
@@ -61,16 +61,14 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
     };
   }, [thread?.id]);
 
-  const sortedMessages = useMemo(
-    () => [...messages].sort((a, b) => a.msgIndex - b.msgIndex),
-    [messages]
-  );
+  const groups = useMemo(() => {
+    const ordered = [...messages].sort((a, b) => a.timestamp - b.timestamp);
+    return groupMessages(ordered, users);
+  }, [messages, users]);
 
-  // Reverse messages and display in reverse flexbox so we stick to bottom of chat
-  const reversedMessages = useMemo(
-    () => [...sortedMessages].reverse(),
-    [sortedMessages]
-  );
+  // Reversed here and rendered in a reverse flexbox so the column stays pinned
+  // to the bottom of the scroll area.
+  const reversedGroups = useMemo(() => [...groups].reverse(), [groups]);
 
   if (thread === null) return null;
 
@@ -78,15 +76,10 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
     <div className="relative flex w-full flex-col flex-grow h-full">
       <div className="flex flex-col-reverse overflow-y-scroll flex-grow p-5">
         <div className="chat-measure flex flex-col-reverse">
-          {reversedMessages.map((message) => (
-            <Fragment key={message.id}>
-              <div className="mb-3">
-                <TextChatMessage
-                  user={users.find(({ id }) => id === message.userId)!}
-                  message={message}
-                />
-              </div>
-            </Fragment>
+          {reversedGroups.map((group) => (
+            <div key={group.messages[0].id} className="w-full min-w-0">
+              <MessageGroupView group={group} />
+            </div>
           ))}
         </div>
       </div>
