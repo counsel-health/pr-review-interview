@@ -219,4 +219,22 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none; /* Safari and Chrome */
   }
+
+  /* Transcript ------------------------------------------------------------ */
+
+  /* Clinical notes run long. Hold the column to a comfortable measure and
+     centre it instead of letting it stretch to the window. */
+  .chat-measure {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  /* Below the point where the sidebar and a full measure both fit, let the
+     transcript use whatever width is left. */
+  @media (max-width: 1053px) {
+    .chat-measure {
+      max-width: none;
+    }
+  }
 }
