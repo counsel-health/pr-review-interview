@@ -1,10 +1,9 @@
-import { ApiThread, ApiMessage, ApiUser } from "@/types/dto";
+import { ApiThread, ApiUser } from "@/types/dto";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { MessageGroupView, groupMessages } from "./ChatMessage";
 import { Icons } from "./icons";
 import { cn } from "@/utils/cssUtils";
-import { handlePromiseRejection } from "@/utils/miscUtils";
-import { getMessages, sendMessage } from "@/utils/api";
+import { useOptimisticMessages } from "@/utils/useOptimisticMessages";
 
 interface Props {
   thread: ApiThread | null;
@@ -14,52 +13,23 @@ interface Props {
 }
 
 export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent }) => {
-  const [messages, setMessages] = useState<ApiMessage[]>([]);
+  const threadId = thread?.id ?? null;
+  const { messages, send } = useOptimisticMessages(threadId, currentUserId);
   const [inputText, setInputText] = useState("");
-  const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = async () => {
-    if (!thread || !inputText.trim() || isSending) return;
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [threadId]);
 
-    const messageText = inputText.trim();
+  const handleSend = () => {
+    const text = inputText.trim();
+    if (!thread || !text) return;
+
     setInputText("");
-    setIsSending(true);
-
-    try {
-      const newMessage = await sendMessage(thread.id, currentUserId, messageText);
-      setMessages((prev) => [...prev, newMessage]);
-      onMessageSent?.(thread.id);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      setInputText(messageText);
-    } finally {
-      setIsSending(false);
-    }
+    send(text);
+    onMessageSent?.(thread.id);
   };
-
-  useEffect(() => {
-    if (!isSending) {
-      textareaRef.current?.focus();
-    }
-  }, [isSending]);
-
-  useEffect(() => {
-    let stale = false;
-    setMessages([]);
-    if (!thread) return;
-
-    handlePromiseRejection(async () => {
-      const fetchedMessages = await getMessages(thread.id);
-      if (!stale) {
-        setMessages(fetchedMessages);
-      }
-    }, "Failed to fetch data");
-
-    return () => {
-      stale = true;
-    };
-  }, [thread?.id]);
 
   const groups = useMemo(() => {
     const ordered = [...messages].sort((a, b) => a.timestamp - b.timestamp);
@@ -99,7 +69,7 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
               <textarea
                 ref={textareaRef}
                 className={cn(
-                  "focus:outline-none flex-1 w-full bg-transparent disabled:bg-background-surface max-h-[calc(30dvh)]"
+                  "focus:outline-none flex-1 w-full bg-transparent max-h-[calc(30dvh)]"
                 )}
                 style={{ resize: "none" }}
                 placeholder="Ask a question..."
@@ -113,18 +83,17 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
                   }
                 }}
                 rows={1}
-                disabled={!thread || isSending}
               />
               <button
                 className="flex-shrink-0"
                 onClick={handleSend}
-                disabled={!thread || !inputText.trim() || isSending}
+                disabled={!inputText.trim()}
                 aria-label="Send message"
               >
                 <Icons.plane
                   className={cn(
                     "w-6 h-6",
-                    !thread || !inputText.trim() || isSending
+                    !inputText.trim()
                       ? "text-content-disabled cursor-default"
                       : "text-brand-teal cursor-pointer"
                   )}

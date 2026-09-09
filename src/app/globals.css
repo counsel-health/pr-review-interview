@@ -257,4 +257,20 @@
     background: #adcfd7;
     color: #104d5b;
   }
+
+  /* In flight: breathe until the server confirms it. */
+  .message-bubble--pending {
+    animation: bubble-pulse 1.4s ease-in-out infinite;
+  }
+
+  .message-bubble--failed {
+    background: #fdecea;
+    color: #e4213b;
+  }
+}
+
+@keyframes bubble-pulse {
+  50% {
+    opacity: 0.45;
+  }
 }
