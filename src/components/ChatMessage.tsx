@@ -1,5 +1,7 @@
-import { ApiMessage, ApiUser } from "@/types/dto";
+import { ApiUser } from "@/types/dto";
+import { ThreadMessage } from "@/utils/useOptimisticMessages";
 import { PhysicianProfileCircle } from "./PhysicianProfileCircle";
+import { Icons } from "./icons";
 import { Text } from "./ui/Text";
 import { cn } from "@/utils/cssUtils";
 
@@ -35,7 +37,7 @@ const formatGroupTime = (timestamp: number) => {
 /** A run of consecutive messages from one author, rendered under one header. */
 export interface MessageGroup {
   user: ApiUser;
-  messages: ApiMessage[];
+  messages: ThreadMessage[];
 }
 
 /**
@@ -43,7 +45,7 @@ export interface MessageGroup {
  * messages in a row gets one name and one timestamp instead of three.
  */
 export function groupMessages(
-  messages: ApiMessage[],
+  messages: ThreadMessage[],
   users: ApiUser[]
 ): MessageGroup[] {
   const groups: MessageGroup[] = [];
@@ -103,11 +105,29 @@ export const MessageGroupView: React.FC<MessageGroupViewProps> = ({ group }) => 
         <div
           key={index}
           className={cn(
-            "message-bubble",
-            isPhysician ? "message-bubble--physician" : "message-bubble--patient"
+            "flex w-full items-center gap-2",
+            isPhysician ? "flex-row" : "flex-row-reverse"
           )}
         >
-          {message.message}
+          <div
+            className={cn(
+              "message-bubble",
+              isPhysician
+                ? "message-bubble--physician"
+                : "message-bubble--patient",
+              message.status === "pending" && "message-bubble--pending",
+              message.status === "failed" && "message-bubble--failed"
+            )}
+          >
+            {message.message}
+          </div>
+
+          {message.status === "pending" && (
+            <Icons.clock
+              className="w-4 h-4 text-content-tertiary flex-shrink-0"
+              aria-hidden="true"
+            />
+          )}
         </div>
       ))}
     </div>
