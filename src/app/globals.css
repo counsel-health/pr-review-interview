@@ -267,6 +267,21 @@
     background: #fdecea;
     color: #e4213b;
   }
+
+  .message-retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    color: #e4213b;
+    cursor: pointer;
+  }
+
+  .message-retry:hover {
+    background: #fdecea;
+  }
 }
 
 @keyframes bubble-pulse {

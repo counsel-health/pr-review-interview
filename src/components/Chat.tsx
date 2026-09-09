@@ -14,7 +14,7 @@ interface Props {
 
 export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent }) => {
   const threadId = thread?.id ?? null;
-  const { messages, send } = useOptimisticMessages(threadId, currentUserId);
+  const { messages, send, retry } = useOptimisticMessages(threadId, currentUserId);
   const [inputText, setInputText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,7 +48,7 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
         <div className="chat-measure flex flex-col-reverse">
           {reversedGroups.map((group) => (
             <div key={group.messages[0].id} className="w-full min-w-0">
-              <MessageGroupView group={group} />
+              <MessageGroupView group={group} onRetry={retry} />
             </div>
           ))}
         </div>

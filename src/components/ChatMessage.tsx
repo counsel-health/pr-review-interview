@@ -67,9 +67,13 @@ export function groupMessages(
 
 interface MessageGroupViewProps {
   group: MessageGroup;
+  onRetry: (id: number) => void;
 }
 
-export const MessageGroupView: React.FC<MessageGroupViewProps> = ({ group }) => {
+export const MessageGroupView: React.FC<MessageGroupViewProps> = ({
+  group,
+  onRetry,
+}) => {
   const { user, messages } = group;
   const isPhysician = user.is_physician;
   const physicianColor = physicianColorClass(user.id);
@@ -127,6 +131,16 @@ export const MessageGroupView: React.FC<MessageGroupViewProps> = ({ group }) => 
               className="w-4 h-4 text-content-tertiary flex-shrink-0"
               aria-hidden="true"
             />
+          )}
+
+          {message.status === "failed" && (
+            <div
+              className="message-retry flex-shrink-0"
+              onClick={() => onRetry(message.id)}
+              title="Retry"
+            >
+              <Icons.rotate className="w-4 h-4" aria-hidden="true" />
+            </div>
           )}
         </div>
       ))}
