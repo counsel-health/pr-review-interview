@@ -1,10 +1,9 @@
-import { ApiThread, ApiMessage, ApiUser } from "@/types/dto";
-import { FC, Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { TextChatMessage } from "./ChatMessage";
+import { ApiThread, ApiUser } from "@/types/dto";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
+import { MessageGroupView, groupMessages } from "./ChatMessage";
 import { Icons } from "./icons";
 import { cn } from "@/utils/cssUtils";
-import { handlePromiseRejection } from "@/utils/miscUtils";
-import { getMessages, sendMessage } from "@/utils/api";
+import { useOptimisticMessages } from "@/utils/useOptimisticMessages";
 
 interface Props {
   thread: ApiThread | null;
@@ -13,105 +12,88 @@ interface Props {
   onMessageSent?: (threadId: string) => void;
 }
 
+/** Length of the transcript cross-fade. Matches `.transcript` in globals.css. */
+const FADE_MS = 300;
+
 export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent }) => {
-  const [messages, setMessages] = useState<ApiMessage[]>([]);
+  const threadId = thread?.id ?? null;
+  const { messages, send, retry } = useOptimisticMessages(threadId, currentUserId);
   const [inputText, setInputText] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = async () => {
-    if (!thread || !inputText.trim() || isSending) return;
+  // Fade the transcript down and back up when the care team moves between
+  // threads, so the pane eases into the new conversation instead of snapping.
+  useEffect(() => {
+    if (!threadId) return;
+    setIsTransitioning(true);
+    setTimeout(() => setIsTransitioning(false), FADE_MS);
+  }, [threadId]);
 
-    const messageText = inputText.trim();
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [threadId]);
+
+  const handleSend = () => {
+    const text = inputText.trim();
+    if (!thread || !text) return;
+
     setInputText("");
-    setIsSending(true);
-
-    try {
-      const newMessage = await sendMessage(thread.id, currentUserId, messageText);
-      setMessages((prev) => [...prev, newMessage]);
-      onMessageSent?.(thread.id);
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      setInputText(messageText);
-    } finally {
-      setIsSending(false);
-    }
+    send(text);
+    onMessageSent?.(thread.id);
   };
 
-  useEffect(() => {
-    if (!isSending) {
-      textareaRef.current?.focus();
-    }
-  }, [isSending]);
+  const groups = useMemo(() => {
+    const ordered = [...messages].sort((a, b) => a.timestamp - b.timestamp);
+    return groupMessages(ordered, users);
+  }, [messages, users]);
 
-  useEffect(() => {
-    let stale = false;
-    setMessages([]);
-    if (!thread) return;
-
-    handlePromiseRejection(async () => {
-      const fetchedMessages = await getMessages(thread.id);
-      if (!stale) {
-        setMessages(fetchedMessages);
-      }
-    }, "Failed to fetch data");
-
-    return () => {
-      stale = true;
-    };
-  }, [thread?.id]);
-
-  const sortedMessages = useMemo(
-    () => [...messages].sort((a, b) => a.msgIndex - b.msgIndex),
-    [messages]
-  );
-
-  // Reverse messages and display in reverse flexbox so we stick to bottom of chat
-  const reversedMessages = useMemo(
-    () => [...sortedMessages].reverse(),
-    [sortedMessages]
-  );
+  // Reversed here and rendered in a reverse flexbox so the column stays pinned
+  // to the bottom of the scroll area.
+  const reversedGroups = useMemo(() => [...groups].reverse(), [groups]);
 
   if (thread === null) return null;
 
   return (
-    <div className="relative flex w-full flex-col flex-grow bg-cover h-full">
-      <div className="flex flex-col-reverse overflow-y-scroll sm:px-[15%] flex-grow p-5">
-        <div className="flex flex-col-reverse">
-          {reversedMessages.map((message) => (
-            <Fragment key={message.id}>
-              <div className="mb-3">
-                <TextChatMessage
-                  user={users.find(({ id }) => id === message.userId)!}
-                  message={message}
-                />
+    <div className="relative flex w-full flex-col flex-grow h-full">
+      <div
+        className={cn(
+          "transcript flex flex-col-reverse overflow-y-scroll flex-grow p-5",
+          isTransitioning && "transcript--fading"
+        )}
+      >
+        <div className="chat-measure flex flex-col-reverse">
+          {/* Hold the list back until the fade completes so the outgoing
+              thread's messages don't flash past on the way out. */}
+          {!isTransitioning &&
+            reversedGroups.map((group) => (
+              <div key={group.messages[0].id} className="w-full min-w-0">
+                <MessageGroupView group={group} onRetry={retry} />
               </div>
-            </Fragment>
-          ))}
+            ))}
         </div>
       </div>
 
-      <div className="py-3 px-5 w-full flex sm:px-[15%]">
-        <div className={cn("flex flex-col w-full justify-center min-w-0")}>
+      <div className="py-3 px-5 w-full flex">
+        <div className="chat-measure flex flex-col justify-center min-w-0">
           <div className="relative flex items-center">
             <div
               className={cn(
-                "flex justify-center items-end gap-3 min-h-[44px] p-4 w-full border border-neutral-200 rounded-xl"
+                "flex justify-center items-end gap-3 min-h-[44px] p-4 w-full border border-border rounded-xl"
               )}
             >
               <Icons.image
-                className={cn(
-                  `w-6 h-6 flex-shrink-0 cursor-default`,
-                  `text-brand-teal`
-                )}
+                className={cn(`w-6 h-6 flex-shrink-0 cursor-default`, `text-brand-teal`)}
+                aria-hidden="true"
               />
               <textarea
                 ref={textareaRef}
                 className={cn(
-                  "focus:outline-none flex-1 w-full bg-transparent disabled:bg-background-surface max-h-[calc(30dvh)]"
+                  "focus:outline-none flex-1 w-full bg-transparent max-h-[calc(30dvh)]"
                 )}
                 style={{ resize: "none" }}
                 placeholder="Ask a question..."
+                aria-label="Message"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={(e) => {
@@ -121,17 +103,17 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
                   }
                 }}
                 rows={1}
-                disabled={!thread || isSending}
               />
               <button
                 className="flex-shrink-0"
                 onClick={handleSend}
-                disabled={!thread || !inputText.trim() || isSending}
+                disabled={!inputText.trim()}
+                aria-label="Send message"
               >
                 <Icons.plane
                   className={cn(
                     "w-6 h-6",
-                    !thread || !inputText.trim() || isSending
+                    !inputText.trim()
                       ? "text-content-disabled cursor-default"
                       : "text-brand-teal cursor-pointer"
                   )}
