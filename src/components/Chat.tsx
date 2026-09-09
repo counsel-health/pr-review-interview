@@ -75,9 +75,9 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
   if (thread === null) return null;
 
   return (
-    <div className="relative flex w-full flex-col flex-grow bg-cover h-full">
-      <div className="flex flex-col-reverse overflow-y-scroll sm:px-[15%] flex-grow p-5">
-        <div className="flex flex-col-reverse">
+    <div className="relative flex w-full flex-col flex-grow h-full">
+      <div className="flex flex-col-reverse overflow-y-scroll flex-grow p-5">
+        <div className="chat-measure flex flex-col-reverse">
           {reversedMessages.map((message) => (
             <Fragment key={message.id}>
               <div className="mb-3">
@@ -91,19 +91,17 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
         </div>
       </div>
 
-      <div className="py-3 px-5 w-full flex sm:px-[15%]">
-        <div className={cn("flex flex-col w-full justify-center min-w-0")}>
+      <div className="py-3 px-5 w-full flex">
+        <div className="chat-measure flex flex-col justify-center min-w-0">
           <div className="relative flex items-center">
             <div
               className={cn(
-                "flex justify-center items-end gap-3 min-h-[44px] p-4 w-full border border-neutral-200 rounded-xl"
+                "flex justify-center items-end gap-3 min-h-[44px] p-4 w-full border border-border rounded-xl"
               )}
             >
               <Icons.image
-                className={cn(
-                  `w-6 h-6 flex-shrink-0 cursor-default`,
-                  `text-brand-teal`
-                )}
+                className={cn(`w-6 h-6 flex-shrink-0 cursor-default`, `text-brand-teal`)}
+                aria-hidden="true"
               />
               <textarea
                 ref={textareaRef}
@@ -112,6 +110,7 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
                 )}
                 style={{ resize: "none" }}
                 placeholder="Ask a question..."
+                aria-label="Message"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyDown={(e) => {
@@ -127,6 +126,7 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
                 className="flex-shrink-0"
                 onClick={handleSend}
                 disabled={!thread || !inputText.trim() || isSending}
+                aria-label="Send message"
               >
                 <Icons.plane
                   className={cn(
