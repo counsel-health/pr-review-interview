@@ -59,10 +59,20 @@ export default function ChatApp() {
   const handleMessageSent = (threadId: string) => {
     setThreads((prev) => {
       const idx = prev.findIndex((t) => t.id === threadId);
-      if (idx <= 0) return prev;
+      if (idx < 0) return prev;
+
       const next = [...prev];
       const [moved] = next.splice(idx, 1);
-      next.unshift(moved);
+      // Reflect the send in the sidebar straight away instead of waiting for
+      // the next list refetch.
+      next.unshift({
+        ...moved,
+        metadata: {
+          ...moved.metadata,
+          unrespondedPatientMessagesCount:
+            moved.metadata.unrespondedPatientMessagesCount + 1,
+        },
+      });
       return next;
     });
   };
