@@ -294,6 +294,38 @@
   .message-retry:hover {
     background: #fdecea;
   }
+
+  /* Thread list ----------------------------------------------------------- */
+
+  .thread-item {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .thread-item:hover {
+    background: #eaebeb;
+  }
+
+  /* Selected: a teal rail plus a tint deep enough to read against the inset
+     background, so it can no longer be mistaken for hover. */
+  .thread-item--active {
+    background: #d8eef3;
+    box-shadow: inset 3px 0 0 0 #13758b;
+  }
+
+  .thread-item__unread {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #13758b;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 590;
+  }
 }
 
 @keyframes bubble-pulse {
