@@ -12,11 +12,23 @@ interface Props {
   onMessageSent?: (threadId: string) => void;
 }
 
+/** Length of the transcript cross-fade. Matches `.transcript` in globals.css. */
+const FADE_MS = 300;
+
 export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent }) => {
   const threadId = thread?.id ?? null;
   const { messages, send, retry } = useOptimisticMessages(threadId, currentUserId);
   const [inputText, setInputText] = useState("");
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fade the transcript down and back up when the care team moves between
+  // threads, so the pane eases into the new conversation instead of snapping.
+  useEffect(() => {
+    if (!threadId) return;
+    setIsTransitioning(true);
+    setTimeout(() => setIsTransitioning(false), FADE_MS);
+  }, [threadId]);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -44,13 +56,21 @@ export const Chat: FC<Props> = ({ thread, users, currentUserId, onMessageSent })
 
   return (
     <div className="relative flex w-full flex-col flex-grow h-full">
-      <div className="flex flex-col-reverse overflow-y-scroll flex-grow p-5">
+      <div
+        className={cn(
+          "transcript flex flex-col-reverse overflow-y-scroll flex-grow p-5",
+          isTransitioning && "transcript--fading"
+        )}
+      >
         <div className="chat-measure flex flex-col-reverse">
-          {reversedGroups.map((group) => (
-            <div key={group.messages[0].id} className="w-full min-w-0">
-              <MessageGroupView group={group} onRetry={retry} />
-            </div>
-          ))}
+          {/* Hold the list back until the fade completes so the outgoing
+              thread's messages don't flash past on the way out. */}
+          {!isTransitioning &&
+            reversedGroups.map((group) => (
+              <div key={group.messages[0].id} className="w-full min-w-0">
+                <MessageGroupView group={group} onRetry={retry} />
+              </div>
+            ))}
         </div>
       </div>
 
