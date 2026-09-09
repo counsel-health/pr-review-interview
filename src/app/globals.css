@@ -238,6 +238,18 @@
     }
   }
 
+  /* Cross-fade the transcript when the physician moves between threads.
+     300ms matches the sidebar. */
+  .transcript {
+    opacity: 1;
+    transition: opacity 300ms ease;
+    will-change: opacity;
+  }
+
+  .transcript--fading {
+    opacity: 0;
+  }
+
   /* Messages -------------------------------------------------------------- */
 
   .message-bubble {
