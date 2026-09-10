@@ -219,4 +219,117 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none; /* Safari and Chrome */
   }
+
+  /* Transcript ------------------------------------------------------------ */
+
+  /* Clinical notes run long. Hold the column to a comfortable measure and
+     centre it instead of letting it stretch to the window. */
+  .chat-measure {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  /* Below the point where the sidebar and a full measure both fit, let the
+     transcript use whatever width is left. */
+  @media (max-width: 1053px) {
+    .chat-measure {
+      max-width: none;
+    }
+  }
+
+  /* Cross-fade the transcript when the physician moves between threads.
+     300ms matches the sidebar. */
+  .transcript {
+    opacity: 1;
+    transition: opacity 300ms ease;
+    will-change: opacity;
+  }
+
+  .transcript--fading {
+    opacity: 0;
+  }
+
+  /* Messages -------------------------------------------------------------- */
+
+  .message-bubble {
+    max-width: 73%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .message-bubble--physician {
+    background: #e0f6fb;
+    color: #104d5b;
+  }
+
+  .message-bubble--patient {
+    background: #adcfd7;
+    color: #104d5b;
+  }
+
+  /* In flight: breathe until the server confirms it. */
+  .message-bubble--pending {
+    animation: bubble-pulse 1.4s ease-in-out infinite;
+  }
+
+  .message-bubble--failed {
+    background: #fdecea;
+    color: #e4213b;
+  }
+
+  .message-retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    color: #e4213b;
+    cursor: pointer;
+  }
+
+  .message-retry:hover {
+    background: #fdecea;
+  }
+
+  /* Thread list ----------------------------------------------------------- */
+
+  .thread-item {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .thread-item:hover {
+    background: #eaebeb;
+  }
+
+  /* Selected: a teal rail plus a tint deep enough to read against the inset
+     background, so it can no longer be mistaken for hover. */
+  .thread-item--active {
+    background: #d8eef3;
+    box-shadow: inset 3px 0 0 0 #13758b;
+  }
+
+  .thread-item__unread {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: #13758b;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 590;
+  }
+}
+
+@keyframes bubble-pulse {
+  50% {
+    opacity: 0.45;
+  }
 }
