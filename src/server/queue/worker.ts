@@ -21,6 +21,14 @@ import {
   handleSummarizeThread,
   type SummarizeThreadPayload,
 } from "./handlers/summarizeThread";
+import {
+  handleRefreshSummary,
+  type RefreshSummaryPayload,
+} from "./handlers/refreshSummary";
+import {
+  handleNotifyCareTeam,
+  type NotifyCareTeamPayload,
+} from "./handlers/notifyCareTeam";
 
 type JobHandler = (payload: unknown) => Promise<void>;
 
@@ -31,6 +39,10 @@ type JobHandler = (payload: unknown) => Promise<void>;
 const HANDLERS: Record<string, JobHandler> = {
   summarizeThread: (payload) =>
     handleSummarizeThread(payload as SummarizeThreadPayload),
+  refreshSummary: (payload) =>
+    handleRefreshSummary(payload as RefreshSummaryPayload),
+  notifyCareTeam: (payload) =>
+    handleNotifyCareTeam(payload as NotifyCareTeamPayload),
 };
 
 const BATCH_SIZE = 5;
